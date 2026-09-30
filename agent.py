@@ -35,10 +35,32 @@ def _keyword_score(text, criterion):
     # Produce a useful 1-10 score without pretending this is an LLM judgment.
     return max(1, min(10, 3 + hits * 0.8))
 
+def _get_secret(name, default=None):
+    """Read settings from environment variables or Streamlit Secrets."""
+    value = os.getenv(name)
+    if value:
+        return value
+
+    try:
+        import streamlit as st
+        value = st.secrets.get(name)
+        if value:
+            return str(value)
+    except Exception:
+        pass
+
+    return default
+
+
 def _openai_scores(text):
-    """Optional LLM scoring. Requires OPENAI_API_KEY and the openai package."""
+    """Optional LLM scoring using local environment variables or Streamlit Secrets."""
     from openai import OpenAI
-    client = OpenAI(api_key=os.environ["OPENAI_API_KEY"])
+
+    api_key = _get_secret("OPENAI_API_KEY")
+    if not api_key:
+        raise RuntimeError("OPENAI_API_KEY is not configured")
+
+    client = OpenAI(api_key=api_key)
     rubric = "\n".join(
         f"- {k} ({v['weight']*100:.0f}%): {v['description']}" for k,v in CRITERIA.items()
     )
@@ -64,7 +86,7 @@ Return ONLY valid JSON with:
 Be evidence-based and use only information present in the proposal.
 Proposal:
 {text[:30000]}"""
-    model = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
+    model = _get_secret("OPENAI_MODEL", "gpt-4o-mini")
     response = client.chat.completions.create(
         model=model,
         temperature=0,

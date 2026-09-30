@@ -44,3 +44,15 @@ This is a relative benchmark against the best submitted proposal.
 
 ## Submission
 The LMS submission should contain the notebook and complete project folder. Put the GitHub and Streamlit URLs in the notebook's top cell.
+
+
+### Streamlit Community Cloud Secrets
+
+For Streamlit deployment, open **App → Settings → Secrets** and add:
+
+```toml
+OPENAI_API_KEY = "your-api-key"
+OPENAI_MODEL = "gpt-4o-mini"
+```
+
+The application supports Streamlit Secrets for cloud deployment and environment variables for local development. Never commit your API key to GitHub.
